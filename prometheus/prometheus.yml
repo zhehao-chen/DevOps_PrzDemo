@@ -1,0 +1,20 @@
+global:
+  scrape_interval: 15s      # 每 15 秒采集一次
+  evaluation_interval: 15s  # 每 15 秒评估一次告警规则
+
+scrape_configs:
+  # 采集 Prometheus 自身指标
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # 采集 Node Exporter 主机指标
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # 采集示例应用指标
+  - job_name: 'demo-app'
+    static_configs:
+      - targets: ['app:8080']
+    metrics_path: '/metrics'
