@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # 示例应用 - 暴露业务指标
   app:
     build: ./app
     container_name: demo-app
@@ -10,7 +9,6 @@ services:
     networks:
       - monitoring
 
-  # Prometheus - 采集指标并存储到本地 TSDB
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -18,16 +16,16 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus        # 这里就是 TSDB 存储目录
+      - prometheus_data:/prometheus        
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'  # TSDB 数据路径
-      - '--storage.tsdb.retention.time=7d' # 保留 7 天数据
+      - '--storage.tsdb.path=/prometheus'  
+      - '--storage.tsdb.retention.time=7d'
       - '--web.enable-lifecycle'
     networks:
       - monitoring
 
-  # Node Exporter - 采集主机系统指标
+  
   node-exporter:
     image: prom/node-exporter:latest
     container_name: node-exporter
@@ -36,7 +34,7 @@ services:
     networks:
       - monitoring
 
-  # Grafana - 从 Prometheus 读取数据并展示 Dashboard
+  
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
@@ -56,7 +54,7 @@ services:
       - monitoring
 
 volumes:
-  prometheus_data:   # Prometheus TSDB 持久化存储
+  prometheus_data:   
   grafana_data:
 
 networks:
