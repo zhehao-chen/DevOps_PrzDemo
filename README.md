@@ -1,91 +1,182 @@
 # Prometheus + TSDB + Grafana Demo
 
-## 架构说明
+## Architecture Overview
 
 ```
-┌─────────────┐    /metrics     ┌──────────────┐    TSDB存储
+┌─────────────┐    /metrics     ┌──────────────┐    TSDB Storage
 │  Demo App   │ ─────────────▶ │  Prometheus  │ ──────────▶ /prometheus/
-│  (Flask)    │                 │   :9090      │              (本地磁盘)
+│  (Flask)    │                 │   :9090      │              (Local Disk)
 └─────────────┘                 └──────┬───────┘
-                                       │ PromQL查询
+                                       │ PromQL Query
 ┌─────────────┐    /metrics            ▼
 │Node Exporter│ ─────────────▶ ┌──────────────┐
-│  (主机指标)  │                │   Grafana    │ ──▶ Dashboard
+│(Host Metrics)│                │   Grafana    │ ──▶ Dashboard
 └─────────────┘                │   :3000      │
                                 └──────────────┘
 ```
 
-## 数据流程
+## Data Flow
 
-1. **采集 (Scrape)**: Prometheus 每 15 秒主动拉取各 target 的 `/metrics` 端点
-2. **存储 (TSDB)**: 数据写入本地 Time Series Database（`/prometheus` 目录）
-3. **查询 (PromQL)**: Grafana 通过 PromQL 从 Prometheus 查询数据
-4. **展示 (Dashboard)**: Grafana 渲染图表，自动刷新
+1. **Scrape**: Prometheus actively pulls `/metrics` endpoint from each target every 15 seconds
+2. **Storage (TSDB)**: Data is written to local Time Series Database (`/prometheus` directory)
+3. **Query (PromQL)**: Grafana queries data from Prometheus using PromQL
+4. **Visualization (Dashboard)**: Grafana renders charts with auto-refresh
 
-## 快速启动
+## Quick Start
 
 ```bash
-# 启动所有服务
+# Start all services
 docker-compose up -d
 
-# 查看日志
+# View logs
 docker-compose logs -f
 
-# 停止
+# Stop services
 docker-compose down
 ```
 
-## 访问地址
+## Access URLs
 
-| 服务 | 地址 | 说明 |
-|------|------|------|
-| Demo App | http://localhost:8080 | 示例应用 |
-| Demo App Metrics | http://localhost:8080/metrics | 原始指标数据 |
-| Prometheus | http://localhost:9090 | 查询界面、Target状态 |
-| Node Exporter | http://localhost:9100/metrics | 主机指标 |
-| Grafana | http://localhost:3000 | Dashboard（admin/admin123）|
+| Service | URL | Description |
+|---------|-----|-------------|
+| Demo App | http://localhost:8080 | Sample application |
+| Demo App Metrics | http://localhost:8080/metrics | Raw metrics data |
+| Prometheus | http://localhost:9090 | Query interface, Target status |
+| Node Exporter | http://localhost:9100/metrics | Host metrics |
+| Grafana | http://localhost:3000 | Dashboard (admin/admin123)|
 
-## Demo 指标说明
+## Demo Metrics Explained
 
-| 指标名 | 类型 | 含义 |
-|--------|------|------|
-| `http_requests_total` | Counter | HTTP请求总次数，按method/endpoint/status分组 |
-| `active_users` | Gauge | 当前在线用户数（模拟波动） |
-| `order_queue_size` | Gauge | 订单队列积压量 |
-| `request_duration_seconds` | Histogram | 请求延迟分布，支持计算P50/P95/P99 |
+| Metric Name | Type | Description |
+|-------------|------|-------------|
+| `http_requests_total` | Counter | Total HTTP requests, grouped by method/endpoint/status |
+| `active_users` | Gauge | Current online users (simulated fluctuation) |
+| `order_queue_size` | Gauge | Order queue backlog |
+| `request_duration_seconds` | Histogram | Request latency distribution, supports P50/P95/P99 calculation |
 
-## 常用 PromQL 示例
+## Common PromQL Examples
 
 ```promql
-# 请求速率（每秒）
+# Request rate (per second)
 rate(http_requests_total[1m])
 
-# P99 延迟
+# P99 latency
 histogram_quantile(0.99, rate(request_duration_seconds_bucket[1m]))
 
-# 错误率
+# Error rate
 rate(http_requests_total{status=~"5.."}[1m]) / rate(http_requests_total[1m])
 
-# 在线用户数趋势
+# Active users trend
 active_users
 
-# CPU 使用率
+# CPU usage percentage
 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[1m])) * 100)
 ```
 
-## TSDB 说明
+## TSDB Details
 
-Prometheus TSDB 数据存储在 Docker volume `prometheus_data` 中，对应容器内 `/prometheus` 目录：
+Prometheus TSDB data is stored in Docker volume `prometheus_data`, corresponding to `/prometheus` directory in the container:
 
 ```
 /prometheus/
-├── chunks_head/     # 内存中的最新数据
-├── wal/             # Write-Ahead Log，保证数据不丢失
-├── 01XXXXX/         # 已压缩的数据块（每2小时一个）
+├── chunks_head/     # Latest data in memory
+├── wal/             # Write-Ahead Log, ensures no data loss
+├── 01XXXXX/         # Compressed data blocks (one per 2 hours)
 └── lock
 ```
 
-可以通过以下命令查看：
+You can view the contents with:
 ```bash
 docker exec prometheus ls -la /prometheus/
 ```
+
+## Architecture Components
+
+### Prometheus
+- **Role**: Metrics collection and storage engine
+- **Port**: 9090
+- **Data Retention**: 15 days (configurable)
+- **Scrape Interval**: 15 seconds
+
+### Demo App (Flask)
+- **Role**: Sample application exposing custom metrics
+- **Port**: 8080
+- **Metrics**: Business metrics (requests, users, orders, latency)
+
+### Node Exporter
+- **Role**: System and hardware metrics collector
+- **Port**: 9100
+- **Metrics**: CPU, memory, disk, network stats
+
+### Grafana
+- **Role**: Visualization and dashboarding
+- **Port**: 3000
+- **Default Credentials**: admin/admin123
+- **Data Source**: Pre-configured Prometheus connection
+
+## Useful Commands
+
+```bash
+# Check service health
+docker-compose ps
+
+# View Prometheus targets
+curl http://localhost:9090/api/v1/targets
+
+# Query metrics via API
+curl 'http://localhost:9090/api/v1/query?query=up'
+
+# Check TSDB disk usage
+docker exec prometheus du -sh /prometheus/
+
+# Restart specific service
+docker-compose restart prometheus
+
+# Remove all data and restart fresh
+docker-compose down -v
+docker-compose up -d
+```
+
+## Troubleshooting
+
+### Prometheus not scraping targets
+```bash
+# Check target status in Prometheus UI
+http://localhost:9090/targets
+
+# Verify network connectivity
+docker exec prometheus wget -O- http://demo-app:8080/metrics
+```
+
+### Grafana dashboard not loading
+```bash
+# Verify Prometheus data source
+curl http://localhost:3000/api/datasources
+
+# Check Grafana logs
+docker-compose logs grafana
+```
+
+### High TSDB disk usage
+```bash
+# Check retention settings in prometheus.yml
+# Default: 15 days
+
+# Manually compact old data
+docker exec prometheus promtool tsdb analyze /prometheus/
+```
+
+## Next Steps
+
+1. **Explore Metrics**: Visit http://localhost:8080/metrics to see raw Prometheus format
+2. **Run Queries**: Use Prometheus UI at http://localhost:9090 to test PromQL
+3. **Create Dashboards**: Log into Grafana and build custom visualizations
+4. **Add Alerts**: Configure alert rules in Prometheus for proactive monitoring
+5. **Scale Up**: Add more exporters (Redis, MySQL, nginx) to monitor full stack
+
+## Additional Resources
+
+- [Prometheus Documentation](https://prometheus.io/docs/)
+- [PromQL Cheat Sheet](https://promlabs.com/promql-cheat-sheet/)
+- [Grafana Dashboards](https://grafana.com/grafana/dashboards/)
+- [TSDB Format Specification](https://prometheus.io/docs/prometheus/latest/storage/)

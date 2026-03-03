@@ -7,7 +7,7 @@
   "panels": [
     {
       "id": 1,
-      "title": "📈 HTTP 请求速率 (req/s)",
+      "title": "📈 HTTP Request Rate (req/s)",
       "type": "timeseries",
       "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
       "targets": [
@@ -26,13 +26,13 @@
     },
     {
       "id": 2,
-      "title": "👥 当前在线用户数",
+      "title": "👥 Active Users",
       "type": "stat",
       "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
       "targets": [
         {
           "expr": "active_users",
-          "legendFormat": "在线用户",
+          "legendFormat": "Online Users",
           "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }
         }
       ],
@@ -52,7 +52,7 @@
     },
     {
       "id": 3,
-      "title": "📦 订单队列积压",
+      "title": "📦 Order Queue Backlog",
       "type": "gauge",
       "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
       "targets": [
@@ -79,7 +79,7 @@
     },
     {
       "id": 4,
-      "title": "⏱ 请求延迟 P50 / P95 / P99",
+      "title": "⏱ Request Latency P50 / P95 / P99",
       "type": "timeseries",
       "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
       "targets": [
@@ -108,18 +108,18 @@
     },
     {
       "id": 5,
-      "title": "❌ HTTP 错误率",
+      "title": "❌ HTTP Error Rate",
       "type": "timeseries",
       "gridPos": { "x": 12, "y": 4, "w": 12, "h": 12 },
       "targets": [
         {
           "expr": "rate(http_requests_total{status=~\"5..\"}[1m])",
-          "legendFormat": "5xx 错误",
+          "legendFormat": "5xx Errors",
           "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }
         },
         {
           "expr": "rate(http_requests_total{status=~\"4..\"}[1m])",
-          "legendFormat": "4xx 错误",
+          "legendFormat": "4xx Errors",
           "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }
         }
       ],
@@ -132,13 +132,13 @@
     },
     {
       "id": 6,
-      "title": "🖥 主机 CPU 使用率",
+      "title": "🖥 Host CPU Usage",
       "type": "timeseries",
       "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
       "targets": [
         {
           "expr": "100 - (avg by(instance)(rate(node_cpu_seconds_total{mode=\"idle\"}[1m])) * 100)",
-          "legendFormat": "CPU 使用率 %",
+          "legendFormat": "CPU Usage %",
           "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }
         }
       ],
@@ -160,13 +160,13 @@
     },
     {
       "id": 7,
-      "title": "💾 主机内存使用率",
+      "title": "💾 Host Memory Usage",
       "type": "timeseries",
       "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
       "targets": [
         {
           "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100",
-          "legendFormat": "内存使用率 %",
+          "legendFormat": "Memory Usage %",
           "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }
         }
       ],
